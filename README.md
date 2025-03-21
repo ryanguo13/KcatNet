@@ -1,4 +1,4 @@
-# KcatNet: A Geometric Deep Learning Framework for Genome-Wide Prediction of Enzyme Catalytic Efficiency![Uploading image.png…]()
+# KcatNet: A Geometric Deep Learning Framework for Genome-Wide Prediction of Enzyme Catalytic Efficiency
 
 
 ## Background
