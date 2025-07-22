@@ -17,6 +17,7 @@ import torch
 from torch_geometric.loader import DataLoader
 from torch_geometric.utils import degree
 from utils.metrics import evaluate_reg
+from utils.device import get_best_device
 
 class InfiniteDataLoader(DataLoader):
     def __init__(self, *args, **kwargs):
@@ -270,7 +271,7 @@ def store_result(df, attention_dict, interaction_keys,  ligand_dict,
                         )
     return df
 
-def virtual_screening( model, data_loader, device='cpu'):
+def virtual_screening( model, data_loader, device=get_best_device()):
     """if "ID" in screen_df.columns:
         # Iterate through the DataFrame check any empty pairs
         for i, row in screen_df.iterrows():

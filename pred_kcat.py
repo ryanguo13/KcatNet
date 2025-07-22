@@ -5,6 +5,7 @@ from utils.Kcat_Dataset import *
 from utils.protein_init import *
 from utils.ligand_init import *
 from utils.trainer import *
+from utils.device import get_best_device
 # Model
 from models.model_kcat import KcatNet
 
@@ -12,13 +13,16 @@ from models.model_kcat import KcatNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_path',type=str, default='./examples/example.xlsx')
-parser.add_argument('--device', type=str, default='cuda', help='')
+parser.add_argument('--device', type=str, default='auto', help='')
 parser.add_argument('--batch_size',type=int,default=1)
 args = parser.parse_args()
 
 with open('config_KcatNet.json','r') as f:
     config = json.load(f)
-device = torch.device(args.device)
+if args.device == 'auto':
+    device = get_best_device()
+else:
+    device = torch.device(args.device)
 
 
 df = pd.read_excel(args.file_path)
@@ -32,7 +36,7 @@ dataset = EnzMolDataset(df, ligand_dict, protein_dict)
 data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False, follow_batch=['mol_x', 'prot_node_esm'])
 
 print('Computing training data degrees for PNA')
-degree_dict = torch.load('./Dataset/degree.pt')
+degree_dict = torch.load('./Dataset/degree.pt', map_location=device)
 prot_deg = degree_dict['protein_deg']
 
 model = KcatNet(prot_deg,mol_in_channels=config['params']['mol_in_channels'],  prot_in_channels=config['params']['prot_in_channels'],
@@ -43,7 +47,7 @@ model = KcatNet(prot_deg,mol_in_channels=config['params']['mol_in_channels'],  p
 
 
 print('loading best checkpoint and predicting test data'+'-'*50)
-model.load_state_dict(torch.load('./RESULT/model_KcatNet.pt'))
+model.load_state_dict(torch.load('./RESULT/model_KcatNet.pt', map_location=device))
 
 reg_preds= pred(model, data_loader, device=args.device)
 df['Predicted Kcats'] = [math.pow(10, Kcat_log_value) for Kcat_log_value in reg_preds]

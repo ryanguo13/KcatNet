@@ -12,6 +12,7 @@ from utils.build_vocab import WordVocab
 from utils.pretrain_trfm import TrfmSeq2seq
 
 import torch
+from utils.device import get_best_device
 
 fdefName = os.path.join(RDConfig.RDDataDir,'BaseFeatures.fdef')
 factory = ChemicalFeatures.BuildFeatureFactory(fdefName)
@@ -19,7 +20,7 @@ import sys
 
 
 trfm = TrfmSeq2seq(45, 256, 45, 4)
-trfm.load_state_dict(torch.load('utils/trfm_12_23000.pkl'))
+trfm.load_state_dict(torch.load('utils/trfm_12_23000.pkl', map_location=get_best_device()))
 trfm.eval()
 
 # Check if the code is running in a Jupyter notebook

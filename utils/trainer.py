@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import csv
 from utils.utils import  virtual_screening
+from utils.device import get_best_device
 
 # Check if the code is running in a Jupyter notebook
 if 'ipykernel' in sys.modules:

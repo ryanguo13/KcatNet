@@ -1,0 +1,27 @@
+numpy
+scipy
+pandas
+matplotlib
+scikit-learn
+tqdm
+h5py
+
+# 深度学习与 GPU 支持
+torch==2.3.0  # 最新 PyTorch，支持 MPS/Metal
+torchaudio
+torchvision
+
+# 分子/生物信息
+rdkit
+biopython
+
+# 进阶深度学习
+transformers
+huggingface-hub
+
+# 进度条等工具
+click
+
+# 其他（如需图神经网络）
+# torch-geometric  # Mac 上支持有限，需手动编译或用 CPU
+

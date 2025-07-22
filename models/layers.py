@@ -387,7 +387,7 @@ class Protein_PNAConv(nn.Module):
         return x
 
 
-class InterConv(MessagePassing):
+class InterConv(MessagePassing): 
     _alpha: OptTensor
 
     def __init__(
@@ -757,3 +757,12 @@ def dropout_edge(edge_index: Tensor, p: float = 0.5, force_undirected: bool = Fa
         edge_mask = edge_mask.nonzero().repeat((2, 1)).squeeze()
 
     return edge_index, edge_mask
+
+
+def get_best_device():
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    elif torch.cuda.is_available():
+        return torch.device("cuda")
+    else:
+        return torch.device("cpu")

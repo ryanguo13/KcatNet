@@ -9,28 +9,35 @@ from utils.Kcat_Dataset import *  # data
 from utils.protein_init import *
 from utils.ligand_init import *
 from utils.trainer import Trainer
+from utils.device import get_best_device
 
 # Model
 from models.model_kcat import KcatNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, default=666)
-parser.add_argument('--device', type=str, default='cuda', help='')
+parser.add_argument('--device', type=str, default='auto', help='')
 parser.add_argument('--result_path', type=str,default="./RESULT",help='path to save trained model')
 parser.add_argument('--epochs', type=int, default=80, help='')
 parser.add_argument('--batch_size',type=int,default=16)
 args = parser.parse_args()
 
 # seed initialize
+if args.device == 'auto':
+    device = get_best_device()
+else:
+    device = torch.device(args.device)
+
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
-torch.cuda.manual_seed(args.seed)
-torch.cuda.manual_seed_all(args.seed)
+if device.type == 'cuda':
+    torch.cuda.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
+    torch.cuda.empty_cache()
 random.seed(args.seed)
 
 with open('config_KcatNet.json','r') as f:
     config = json.load(f)
-device = torch.device(args.device)
 
 if not os.path.exists(args.result_path):
     os.makedirs(args.result_path)
@@ -48,12 +55,11 @@ ligand_smiles = list(set(df['Smile'].tolist()))
 
 protein_dict = protein_init(protein_seqs)
 torch.save(protein_dict,'./Dataset/protein.pt' )
-#protein_dict = torch.load('./Dataset/protein.pt')
+#protein_dict = torch.load('./Dataset/protein.pt', map_location=device)
 
 ligand_dict = ligand_init(ligand_smiles)
 torch.save(ligand_dict,'./Dataset/ligand.pt' )
 
-torch.cuda.empty_cache()
 train_dataset = EnzMolDataset(train_df, ligand_dict, protein_dict)
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, sampler=None, follow_batch=['mol_x',  'prot_node_esm'])#follow_batch描述节点信息 用于确保 mini-batch 中的节点特征和目标的顺序与原始图中的节点顺序匹配
 
@@ -64,7 +70,7 @@ print('Computing training data degrees for PNA')
 prot_deg = compute_pna_degrees(train_dataset)
 degree_dict = {'protein_deg':prot_deg}
 torch.save(degree_dict, './Dataset/degree.pt')
-"""degree_dict = torch.load('./Dataset/degree.pt')
+"""degree_dict = torch.load('./Dataset/degree.pt', map_location=device)
 prot_deg = degree_dict['protein_deg']"""
 
 model = KcatNet(prot_deg,mol_in_channels=config['params']['mol_in_channels'],  prot_in_channels=config['params']['prot_in_channels'],
@@ -84,7 +90,7 @@ print('finished training model')
 
 
 """print('loading best checkpoint and predicting test data'+'-'*50)
-model.load_state_dict(torch.load(os.path.join(args.result_path,'model_KcatNet.pt')))
+model.load_state_dict(torch.load(os.path.join(args.result_path,'model_KcatNet.pt'), map_location=device))
 
 with open('./Dataset/KcatNet_testdf.pkl', "rb") as pkl_file:
     test_df = pickle.load(pkl_file)

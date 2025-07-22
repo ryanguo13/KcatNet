@@ -17,7 +17,9 @@ import pandas as pd
 from Bio import SeqIO
 import json
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+from utils.device import get_best_device
+
+device = get_best_device()
 
 # Check if the code is running in a Jupyter notebook
 if 'ipykernel' in sys.modules:
@@ -33,14 +35,11 @@ import math
 
 
 def get_T5_model():
-    #model = T5EncoderModel.from_pretrained("Rostlab/prot_t5_xl_uniref50", do_lower_case=False)
-    model = T5EncoderModel.from_pretrained("/home/pantong/Code/ProtT5/").to(device)
+    model = T5EncoderModel.from_pretrained("Rostlab/prot_t5_xl_uniref50").to(device)
     model = model.to(dtype=torch.float16)
     model.half()
     model = model.eval() # set model to evaluation model
-    #tokenizer = T5Tokenizer.from_pretrained("Rostlab/prot_t5_xl_uniref50", do_lower_case=False )
-    tokenizer = T5Tokenizer.from_pretrained("/home/pantong/Code/ProtT5/", do_lower_case=False,force_download=True)
-
+    tokenizer = T5Tokenizer.from_pretrained("Rostlab/prot_t5_xl_uniref50", do_lower_case=False)
     return model, tokenizer
 
 def get_embeddings(model, tokenizer, seqs, per_residue, per_protein,  max_residues=4000, max_seq_len=1000, max_batch=100):
@@ -104,8 +103,8 @@ def ESM_init(seq):
     model_location = "esm2_t33_650M_UR50D"
     model, alphabet = esm.pretrained.load_model_and_alphabet(model_location)
     model.eval()
-    if torch.cuda.is_available():
-        model = model.cuda()
+    if device.type != 'cpu':
+        model = model.to(device)
     batch_converter = alphabet.get_batch_converter()
 
     seq_feat = seq_feature(seq)
@@ -131,8 +130,8 @@ def protein_init(Sequence): #,organism
     model_location = "esm2_t33_650M_UR50D"
     model, alphabet = esm.pretrained.load_model_and_alphabet(model_location)
     model.eval()
-    if torch.cuda.is_available():
-        model = model.cuda()
+    if device.type != 'cpu':
+        model = model.to(device)
     batch_converter = alphabet.get_batch_converter()
 
     seqs = dict()
